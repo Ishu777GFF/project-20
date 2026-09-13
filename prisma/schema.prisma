@@ -1,0 +1,197 @@
+// MediKiosk AI — SIH26047 T3 prototype
+// Deterministic demo schema. This is a local, clearly-mocked prototype — no production PHI guarantees.
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+  NURSE
+  ADMIN
+}
+
+enum VisitMode {
+  GENERAL
+  AYUSH
+}
+
+enum VisitStatus {
+  IN_PROGRESS
+  READY_FOR_REVIEW
+  REVIEWED
+}
+
+enum Priority {
+  NORMAL
+  URGENT
+}
+
+enum ConsentType {
+  history_collection
+  document_processing
+  mock_abdm_sharing
+}
+
+enum SummaryStatus {
+  PENDING
+  CONFIRMED
+  REJECTED
+}
+
+enum InputMode {
+  TOUCH
+  TEXT
+  VOICE
+}
+
+model User {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  role      Role
+  accessCode String? @unique @map("access_code")
+  passwordHash String? @map("password_hash")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("users")
+}
+
+model Patient {
+  id                String    @id @default(uuid()) @db.Uuid
+  fullName          String    @map("full_name")
+  dob               DateTime? @db.Date
+  gender            String?
+  phone             String?
+  abhaId            String    @map("abha_id")
+  accessCode        String?   @unique @map("access_code")
+  passwordHash      String?   @map("password_hash")
+  preferredLanguage String    @default("en") @map("preferred_language")
+  createdAt         DateTime  @default(now()) @map("created_at")
+
+  visits Visit[]
+
+  @@map("patients")
+}
+
+model Visit {
+  id          String      @id @default(uuid()) @db.Uuid
+  patientId   String      @map("patient_id") @db.Uuid
+  patient     Patient     @relation(fields: [patientId], references: [id])
+  mode        VisitMode
+  status      VisitStatus @default(IN_PROGRESS)
+  priority    Priority    @default(NORMAL)
+  startedAt   DateTime    @default(now()) @map("started_at")
+  completedAt DateTime?
+
+  consents  Consent[]
+  answers   HistoryAnswer[]
+  documents Document[]
+  redFlags  RedFlag[]
+  summary   ClinicalSummary?
+
+  @@index([priority, status, startedAt(sort: Desc)])
+  @@map("visits")
+}
+
+model Consent {
+  id        String      @id @default(uuid()) @db.Uuid
+  visitId   String      @map("visit_id") @db.Uuid
+  visit     Visit       @relation(fields: [visitId], references: [id])
+  type      ConsentType
+  granted   Boolean     @default(true)
+  version   String      @default("v1.0")
+  grantedAt DateTime    @default(now()) @map("granted_at")
+
+  @@unique([visitId, type])
+  @@map("consents")
+  @@index([visitId])
+}
+
+model HistoryAnswer {
+  id         String    @id @default(uuid()) @db.Uuid
+  visitId    String    @map("visit_id") @db.Uuid
+  visit      Visit     @relation(fields: [visitId], references: [id])
+  questionId String    @map("question_id")
+  label      String
+  answer     String
+  inputMode  InputMode @default(TOUCH) @map("input_mode")
+  createdAt  DateTime  @default(now()) @map("created_at")
+
+  @@unique([visitId, questionId])
+  @@map("history_answers")
+  @@index([visitId])
+}
+
+model Document {
+  id            String   @id @default(uuid()) @db.Uuid
+  visitId       String   @map("visit_id") @db.Uuid
+  visit         Visit    @relation(fields: [visitId], references: [id])
+  filename      String
+  type          String
+  ocrStatus     String   @map("ocr_status")
+  extractedText String?  @map("extracted_text")
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  entities DocumentEntity[]
+
+  @@map("documents")
+  @@index([visitId])
+}
+
+model DocumentEntity {
+  id         String   @id @default(uuid()) @db.Uuid
+  documentId String   @map("document_id") @db.Uuid
+  document   Document @relation(fields: [documentId], references: [id])
+  entityType String   @map("entity_type")
+  name       String
+  value      String?
+  unit       String?
+  abnormal   Boolean  @default(false)
+
+  @@map("document_entities")
+  @@index([documentId])
+}
+
+model RedFlag {
+  id        String   @id @default(uuid()) @db.Uuid
+  visitId   String   @map("visit_id") @db.Uuid
+  visit     Visit    @relation(fields: [visitId], references: [id])
+  ruleId    String   @map("rule_id")
+  severity  String
+  message   String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("red_flags")
+  @@index([visitId])
+}
+
+model ClinicalSummary {
+  id          String        @id @default(uuid()) @db.Uuid
+  visitId     String        @unique @map("visit_id") @db.Uuid
+  visit       Visit         @relation(fields: [visitId], references: [id])
+  summaryText String        @map("summary_text")
+  status      SummaryStatus @default(PENDING)
+  version     Int           @default(1)
+  reviewer    String?
+  updatedAt   DateTime      @updatedAt @map("updated_at")
+
+  @@map("clinical_summaries")
+}
+
+model AuditLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  actor        String
+  action       String
+  resourceType String   @map("resource_type")
+  resourceId   String   @map("resource_id")
+  metadata     Json     @default("{}")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+  @@index([resourceId])
+}

@@ -600,35 +600,29 @@ export default function Home() {
             <option value="AYUSH">{text.ayush}</option>
           </select>
 
-          <label className="eyebrow mt-6 block" htmlFor="name">
-            {text.name}
-          </label>
-          <input id="name" className="input mt-2" placeholder={text.nameHint} />
-
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="eyebrow block" htmlFor="dob">
-                {lang === "hi" ? "जन्म तिथि" : "Date of birth"}
-              </label>
-              <input id="dob" className="input mt-2" type="date" max={new Date().toISOString().slice(0, 10)} />
-            </div>
-            <div>
-              <label className="eyebrow block" htmlFor="gender">
-                {lang === "hi" ? "लिंग" : "Gender"}
-              </label>
-              <select id="gender" className="input mt-2" defaultValue="">
-                <option value="" disabled>{lang === "hi" ? "चुनें" : "Select"}</option>
-                <option value="Female">{lang === "hi" ? "महिला" : "Female"}</option>
-                <option value="Male">{lang === "hi" ? "पुरुष" : "Male"}</option>
-                <option value="Other">{lang === "hi" ? "अन्य" : "Other"}</option>
-              </select>
-            </div>
-          </div>
-
-          <label className="eyebrow mt-6 block" htmlFor="phone">
-            {lang === "hi" ? "मोबाइल नंबर" : "Mobile number"}
-          </label>
-          <input id="phone" className="input mt-2" type="tel" inputMode="numeric" placeholder={lang === "hi" ? "10 अंकों का मोबाइल नंबर" : "10-digit mobile number"} />
+          {patientAccount ? (
+            <aside className="notice mt-6">
+              <p className="font-semibold text-brand-900">{lang === "hi" ? "सहेजी गई रोगी प्रोफ़ाइल का उपयोग किया जा रहा है" : "Using your saved patient profile"}</p>
+              <div className="mt-3 grid gap-2 text-sm sm:grid-cols-2">
+                <span><b>{lang === "hi" ? "नाम:" : "Name:"}</b> {patientAccount.fullName}</span>
+                <span><b>{lang === "hi" ? "जन्म तिथि:" : "DOB:"}</b> {patientAccount.dob?.toISOString().slice(0, 10)}</span>
+                <span><b>{lang === "hi" ? "लिंग:" : "Gender:"}</b> {patientAccount.gender}</span>
+                <span><b>{lang === "hi" ? "मोबाइल:" : "Mobile:"}</b> {patientAccount.phone}</span>
+              </div>
+              <p className="mt-3 text-xs">{lang === "hi" ? "इन विवरणों को बदलने के लिए रोगी पोर्टल में ‘विवरण संपादित करें’ विकल्प का उपयोग करें।" : "To change these details, use Edit details in your patient portal."}</p>
+            </aside>
+          ) : (
+            <>
+              <label className="eyebrow mt-6 block" htmlFor="name">{text.name}</label>
+              <input id="name" className="input mt-2" placeholder={text.nameHint} />
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                <div><label className="eyebrow block" htmlFor="dob">{lang === "hi" ? "जन्म तिथि" : "Date of birth"}</label><input id="dob" className="input mt-2" type="date" max={new Date().toISOString().slice(0, 10)} /></div>
+                <div><label className="eyebrow block" htmlFor="gender">{lang === "hi" ? "लिंग" : "Gender"}</label><select id="gender" className="input mt-2" defaultValue=""><option value="" disabled>{lang === "hi" ? "चुनें" : "Select"}</option><option value="Female">{lang === "hi" ? "महिला" : "Female"}</option><option value="Male">{lang === "hi" ? "पुरुष" : "Male"}</option><option value="Other">{lang === "hi" ? "अन्य" : "Other"}</option></select></div>
+              </div>
+              <label className="eyebrow mt-6 block" htmlFor="phone">{lang === "hi" ? "मोबाइल नंबर" : "Mobile number"}</label>
+              <input id="phone" className="input mt-2" type="tel" inputMode="numeric" placeholder={lang === "hi" ? "10 अंकों का मोबाइल नंबर" : "10-digit mobile number"} />
+            </>
+          )}
 
           <label className="mt-6 flex items-start gap-2 text-sm text-slate-700">
             <input id="consent" type="checkbox" className="mt-1" />

@@ -147,7 +147,11 @@ export default function Home() {
         if (original && current === translate(original)) node.textContent = original;
         continue;
       }
-      if (!original) {
+      if (original) {
+        // A returning English → Hindi switch: React has restored the original text,
+        // so reapply its cached Hindi translation.
+        if (current === original) node.textContent = translate(original) ?? original;
+      } else {
         const translated = translate(current);
         if (translated) {
           translatedTextNodes.current.set(node, current);
@@ -162,7 +166,9 @@ export default function Home() {
         if (original && current === translate(original)) element.placeholder = original;
         continue;
       }
-      if (!original) {
+      if (original) {
+        if (current === original) element.placeholder = translate(original) ?? original;
+      } else {
         const translated = translate(current);
         if (translated) { translatedPlaceholders.current.set(element, current); element.placeholder = translated; }
       }
@@ -972,8 +978,8 @@ function PortalHeader({ name, role, language, onLanguageChange, onHome, onPortal
   return (
     <header className="portal-header">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-4 px-5 py-4">
-        <button className="flex items-center gap-3 text-left" onClick={onHome}>
-          <span className="portal-mark">✦</span><span><b className="block text-lg text-white">MediKiosk</b><small className="text-blue-200">MINISTRY OF AYUSH · SIH26047</small></span>
+        <button className="brand-button flex items-center gap-3 text-left" onClick={onHome}>
+          <span className="portal-mark">✦</span><span><b className="block text-lg text-white">CareSetu</b><small className="text-blue-200">MINISTRY OF AYUSH · SIH26047</small></span>
         </button>
         <nav className="flex flex-wrap items-center gap-2 text-sm text-blue-100"><button className="portal-nav" onClick={onPortalHome}>⌂ {labels.home}</button><button className="portal-nav" onClick={onVisits}>◌ {role === "Doctor" ? labels.directory : labels.myVisits}</button><button className="btn portal-primary" onClick={onPrimary}>{primaryLabel}</button><div className="flex rounded-lg bg-white p-1"><button className={`header-language ${language === "en" ? "header-language-active" : ""}`} onClick={() => onLanguageChange("en")}>EN</button><button className={`header-language ${language === "hi" ? "header-language-active" : ""}`} onClick={() => onLanguageChange("hi")}>हिंदी</button></div><button className="rounded-full bg-white px-3 py-1 font-semibold text-brand-900" onClick={onHome}>{name || role}</button></nav>
       </div>

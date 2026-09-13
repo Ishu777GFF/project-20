@@ -2,10 +2,10 @@ export function Header({ onHome, language, onLanguageChange }: { onHome: () => v
   return (
     <header className="flex items-center justify-between px-6 py-4">
       <button
-        className="flex items-baseline gap-2 text-lg font-bold text-brand-900"
+        className="brand-button flex items-baseline gap-2 text-lg font-bold text-brand-900"
         onClick={onHome}
       >
-        MediKiosk{" "}
+        CareSetu{" "}
         <small className="text-sm font-normal text-slate-500">AI intake</small>
       </button>
       <div className="flex items-center gap-3">

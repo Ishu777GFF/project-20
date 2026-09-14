@@ -57,6 +57,33 @@ const copy = {
   }
 } as const;
 
+const landingDetails = {
+  en: {
+    promise: "Less waiting. More listening.",
+    description: "CareSetu helps reduce repetitive consultation intake by turning a patient's words, documents, and answers into a clear case for the clinician.",
+    metrics: ["Bilingual intake", "Voice or touch", "Doctor-ready review"],
+    benefits: [
+      ["Guide the conversation", "Adaptive follow-up questions help capture useful details without making patients repeat themselves."],
+      ["Keep the story together", "History, uploaded documents, safety signals, and AYUSH fields stay in one structured visit."],
+      ["Hand over clearly", "Doctors receive an editable summary and can review, confirm, or send a case back."],
+    ],
+    steps: ["Patient shares their story", "CareSetu organizes key details", "Doctor reviews a clear summary"],
+    flowTitle: "From patient story to clinical clarity",
+  },
+  hi: {
+    promise: "कम इंतज़ार। बेहतर संवाद।",
+    description: "CareSetu रोगी की बात, दस्तावेज़ और उत्तरों को चिकित्सक के लिए एक स्पष्ट केस में बदलकर बार-बार होने वाले इंटेक समय को कम करने में मदद करता है।",
+    metrics: ["दो भाषाओं में इंटेक", "आवाज़ या टच", "डॉक्टर समीक्षा के लिए तैयार"],
+    benefits: [
+      ["बातचीत को दिशा दें", "अनुकूली फॉलो-अप प्रश्न रोगी को एक ही बात बार-बार कहे बिना ज़रूरी जानकारी दर्ज करने में मदद करते हैं।"],
+      ["पूरी कहानी साथ रखें", "इतिहास, अपलोड दस्तावेज़, सुरक्षा संकेत और आयुष फ़ील्ड एक संरचित विज़िट में रहते हैं।"],
+      ["स्पष्ट रूप से सौंपें", "डॉक्टर को संपादन योग्य सारांश मिलता है और वे केस की समीक्षा, पुष्टि या वापसी कर सकते हैं।"],
+    ],
+    steps: ["रोगी अपनी बात साझा करता है", "CareSetu मुख्य जानकारी व्यवस्थित करता है", "डॉक्टर स्पष्ट सारांश की समीक्षा करता है"],
+    flowTitle: "रोगी की बात से स्पष्ट क्लिनिकल केस तक",
+  },
+} as const;
+
 const portalCopy = {
   en: {
     home: "Home", myVisits: "My visits", directory: "Patient Directory", startVisit: "+ Start a new visit", newCase: "+ New case taking",
@@ -101,6 +128,35 @@ const DEMO_ANSWERS: Record<string, { value: string; input: "VOICE" | "TOUCH" }> 
   history: { value: "Diabetes; Metformin 500 mg; no known allergies", input: "VOICE" },
 };
 
+/** Transparent, symptom-keyword follow-ups. This is a prototype routing aid, not diagnosis. */
+function generalIntakeQuestions(chiefConcern?: string): Question[] {
+  const base = questions.GENERAL;
+  if (!chiefConcern) return [base[0]];
+  const common = [base[0], base[1], base[2]];
+  const history = base[5];
+  const followUp = (id: string, label: string, hi: string, choices: string[] = [], hiChoices?: string[]): Question => ({ id, label, hi, type: choices.length ? "choice" : "text", choices, hiChoices });
+  const symptom = chiefConcern.toLowerCase();
+  if (/(chest|सीने)/.test(symptom)) return [...common, base[3], base[4], history];
+  if (/(cough|खांसी|खाँसी|cold)/.test(symptom)) return [...common, followUp("cough_type", "Is the cough dry or with phlegm?", "खांसी सूखी है या बलगम के साथ?", ["Dry", "With phlegm", "Not sure"], ["सूखी", "बलगम के साथ", "निश्चित नहीं"]), followUp("fever", "Have you had fever or chills?", "क्या आपको बुखार या ठंड लग रही है?", ["No", "Yes"], ["नहीं", "हाँ"]), base[3], history];
+  if (/(stomach|abdominal|abdomen|पेट)/.test(symptom)) return [...common, followUp("pain_location", "Where is the discomfort located?", "तकलीफ किस जगह है?", ["Upper abdomen", "Lower abdomen", "All over", "Not sure"], ["ऊपरी पेट", "निचला पेट", "पूरे पेट में", "निश्चित नहीं"]), followUp("vomiting", "Any vomiting or loose stools?", "क्या उल्टी या दस्त हैं?", ["No", "Yes"], ["नहीं", "हाँ"]), history];
+  if (/(headache|head pain|सिर दर्द)/.test(symptom)) return [...common, followUp("headache_onset", "Did the headache start suddenly?", "क्या सिरदर्द अचानक शुरू हुआ?", ["No", "Yes"], ["नहीं", "हाँ"]), followUp("vision_change", "Any vision change, weakness, or fainting?", "क्या दृष्टि में बदलाव, कमजोरी या बेहोशी हुई?", ["No", "Yes"], ["नहीं", "हाँ"]), history];
+  if (/(fever|बुखार)/.test(symptom)) return [...common, followUp("temperature", "Do you know your highest temperature?", "क्या आपको अपना अधिकतम तापमान पता है?"), followUp("fever_symptoms", "Any rash, cough, pain, or burning urine?", "क्या चकत्ते, खांसी, दर्द या पेशाब में जलन है?"), history];
+  return [...common, base[3], base[4], history];
+}
+
+function tidyClinicalSummary(summary: string) {
+  if (summary.startsWith("CLINICAL SUMMARY")) return summary;
+  const sections = summary.split(/\n\n+/).filter(Boolean);
+  const formatted = sections.map((section) => {
+    const match = section.match(/^([^:]+):\s*([\s\S]*)$/);
+    if (!match) return section;
+    const heading = match[1].replace(/\b\w/g, (letter) => letter.toUpperCase()).toUpperCase();
+    const content = match[2].replace(/;\s*/g, "\n• ");
+    return `${heading}\n• ${content}`;
+  });
+  return ["CLINICAL SUMMARY", ...formatted].join("\n\n");
+}
+
 export default function Home() {
   const [view, setView] = useState<View>("home");
   const [lang, setLang] = useState<"en" | "hi">("en");
@@ -128,8 +184,9 @@ export default function Home() {
   const translatedTextNodes = useRef(new WeakMap<Text, string>());
   const translatedPlaceholders = useRef(new WeakMap<HTMLInputElement | HTMLTextAreaElement, string>());
 
-  const q: Question | undefined = questions[mode][step];
-  const total = questions[mode].length;
+  const intakeQuestions = mode === "GENERAL" ? generalIntakeQuestions(answers.chief) : questions.AYUSH;
+  const q: Question | undefined = intakeQuestions[step];
+  const total = intakeQuestions.length;
   const text = copy[lang];
   const portal = portalCopy[lang];
 
@@ -215,7 +272,7 @@ export default function Home() {
           const demo = DEMO_ANSWERS[question.id];
           await saveAnswerRaw(question, demo.value, demo.input, data.visitId);
         }
-        setStep(total);
+        setStep(questions.GENERAL.length);
         setView("upload");
       } else {
         setView("intake");
@@ -251,7 +308,7 @@ export default function Home() {
   const openCase = async (id: string) => {
     const data = await utils.client.doctorCase.query({ visitId: id });
     setActive(data);
-    setSummaryDraft(data.visit.summary?.summaryText ?? "");
+    setSummaryDraft(tidyClinicalSummary(data.visit.summary?.summaryText ?? ""));
     setFhirJson(null);
     setView("case");
   };
@@ -437,32 +494,39 @@ export default function Home() {
 
   // ---------- views ----------
   if (view === "home") {
+    const landing = landingDetails[lang];
     return (
       <main>
         <Header onHome={reset} language={lang} onLanguageChange={setLang} />
-        <section className="card mx-auto mt-10 max-w-3xl">
-          <p className="eyebrow">{text.landingEyebrow}</p>
-          <h1 className="mt-2 text-3xl font-bold text-brand-900">
-            {text.landingTitle}
-          </h1>
-          <p className="mt-3 text-slate-600">
-            {text.landingDescription}
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <button className="btn btn-primary" onClick={() => setView("patientLogin")}>
-              {text.patientSignIn}
-            </button>
-            <button className="btn btn-secondary" onClick={() => { setAssignedCode(null); setView("patientRegister"); }}>
-              {text.newRegistration}
-            </button>
-            <button className="btn btn-secondary" onClick={() => openLogin("DOCTOR")}>
-              {text.doctorPortal}
-            </button>
+        <section className="landing-hero landing-hero-background mx-auto mt-7 max-w-6xl">
+          <div className="landing-copy">
+            <p className="landing-pill">✦ {text.landingEyebrow}</p>
+            <h1 className="mt-5 text-4xl font-bold tracking-tight text-brand-900 sm:text-5xl">{text.landingTitle}</h1>
+            <p className="landing-promise mt-4">{landing.promise}</p>
+            <p className="mt-4 max-w-xl leading-7 text-slate-600">{landing.description}</p>
+            <div className="mt-7 flex flex-wrap gap-3">
+              <button className="btn btn-primary" onClick={() => setView("patientLogin")}>{text.patientSignIn}</button>
+              <button className="btn btn-secondary" onClick={() => { setAssignedCode(null); setView("patientRegister"); }}>{text.newRegistration}</button>
+              <button className="btn btn-secondary" onClick={() => openLogin("DOCTOR")}>{text.doctorPortal}</button>
+            </div>
+            <div className="landing-metrics mt-8">{landing.metrics.map((metric) => <span key={metric}>✓ {metric}</span>)}</div>
           </div>
-          <aside className="notice mt-6 text-sm">
-            {text.safety}
-          </aside>
+          <div className="landing-art-note">{lang === "hi" ? "रोगी की बात, देखभाल से जुड़ी" : "Built around the patient conversation"}</div>
         </section>
+
+        <section className="mx-auto mt-6 max-w-6xl">
+          <div className="landing-section-heading"><p className="eyebrow">CareSetu approach</p><h2>{lang === "hi" ? "तेज़ केस-टेकिंग, मानवीय देखभाल" : "Faster case-taking, human-centered care"}</h2></div>
+          <div className="landing-benefits mt-5">
+            {landing.benefits.map(([title, description], index) => <article className="landing-benefit" key={title}><span className="landing-benefit-icon">{["◌", "▣", "✓"][index]}</span><h3>{title}</h3><p>{description}</p></article>)}
+          </div>
+        </section>
+
+        <section className="landing-flow mx-auto mt-6 max-w-6xl">
+          <div><p className="eyebrow text-blue-100">CareSetu flow</p><h2>{landing.flowTitle}</h2><p>{lang === "hi" ? "हर चरण में जानकारी समझने योग्य, समीक्षा योग्य और सुरक्षित रहती है।" : "Each step keeps information understandable, reviewable, and safe."}</p></div>
+          <ol>{landing.steps.map((step, index) => <li key={step}><span>0{index + 1}</span>{step}</li>)}</ol>
+        </section>
+
+        <aside className="notice landing-notice mx-auto mt-6 max-w-6xl text-sm">{text.safety}</aside>
       </main>
     );
   }
@@ -660,7 +724,7 @@ export default function Home() {
         <Header onHome={reset} language={lang} onLanguageChange={setLang} />
         <section className="card mx-auto mt-10 max-w-2xl">
           <div className="flex gap-1">
-            {questions[mode].map((_, i) => (
+            {intakeQuestions.map((_, i) => (
               <span
                 key={i}
                 className={`h-1.5 flex-1 rounded-full ${i <= step ? "bg-brand-500" : "bg-slate-200"}`}
@@ -668,7 +732,7 @@ export default function Home() {
             ))}
           </div>
           <p className="eyebrow mt-4">
-            {mode === "AYUSH" ? text.ayushField : text.adaptive} ·{" "}
+            {mode === "AYUSH" ? text.ayushField : step > 0 ? (lang === "hi" ? "लक्षण-आधारित फॉलो-अप" : "Symptom-guided follow-up") : text.adaptive} ·{" "}
             {step + 1}/{total}
           </p>
           <h2 className="mt-1 text-2xl font-bold text-brand-900">
@@ -890,7 +954,7 @@ export default function Home() {
             <div className="card">
               <p className="eyebrow">Editable clinical summary</p>
               <textarea
-                className="input mt-3 min-h-56"
+                className="input summary-editor mt-3 min-h-72"
                 value={summaryDraft}
                 onChange={(e) => setSummaryDraft(e.target.value)}
               />

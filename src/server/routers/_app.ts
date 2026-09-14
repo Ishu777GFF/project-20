@@ -203,18 +203,15 @@ export const appRouter = router({
     if (!visit) throw new Error("Visit not found");
     const chief = visit.answers.find((x) => x.questionId === "chief")?.answer ?? "Not recorded";
     const rest = visit.answers.filter((x) => x.questionId !== "chief");
-    const lines = [
-      `Chief concern: ${chief}.`,
-      `Structured history: ${rest.map((x) => `${x.label}: ${x.answer}`).join("; ")}.`,
-      ...(visit.redFlags.length
-        ? [`Triage alert: ${visit.redFlags.map((f) => f.message).join(" ")}`]
-        : []),
-      ...(visit.documents[0]
-        ? [`Document extraction (MOCK; clinician validation required): ${visit.documents[0].extractedText}`]
-        : []),
-      "Clinical documentation aid only — no diagnosis or treatment recommendation. Requires clinician verification.",
+    const sections = [
+      "CLINICAL SUMMARY",
+      `CHIEF CONCERN\n${chief}`,
+      `SYMPTOM HISTORY\n${rest.length ? rest.map((x) => `• ${x.label}: ${x.answer}`).join("\n") : "• No additional history recorded."}`,
+      `TRIAGE / SAFETY SIGNALS\n${visit.redFlags.length ? visit.redFlags.map((f) => `• ${f.message}`).join("\n") : "• No rule-based escalation signal recorded."}`,
+      `DOCUMENTS\n${visit.documents[0] ? `• MOCK OCR (clinician validation required): ${visit.documents[0].extractedText}` : "• No documents uploaded."}`,
+      "CLINICIAN REVIEW\nClinical documentation aid only. No diagnosis or treatment recommendation. Requires clinician verification.",
     ];
-    const summary = lines.join("\n\n");
+    const summary = sections.join("\n\n");
     await db.$transaction([
       db.visit.update({ where: { id: visit.id }, data: { status: "READY_FOR_REVIEW", completedAt: new Date() } }),
       db.clinicalSummary.upsert({

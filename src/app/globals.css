@@ -77,6 +77,25 @@ body {
 .brand-button:hover .portal-mark { transform: rotate(10deg) scale(1.05); }
 .portal-header .brand-button:hover { background: rgb(255 255 255 / .1); box-shadow: 0 5px 14px rgb(0 0 0 / .16); }
 
+/* Landing page: warm, information-rich introduction without overloading the user. */
+.landing-hero { position: relative; display: grid; min-height: 31rem; overflow: hidden; border: 1px solid #dce5f2; border-radius: 1.35rem; box-shadow: 0 14px 34px rgb(22 35 59 / .08); }
+.landing-hero-background { justify-items: end; background-color: #eef5f6; background-image: linear-gradient(90deg, rgb(239 248 246 / .1) 0%, rgb(239 248 246 / .08) 32%, rgb(255 255 255 / .86) 55%, #fff 73%), url("/images/caresetu-hero.png"); background-size: cover; background-position: left center; }
+.landing-copy { position: relative; z-index: 1; width: min(100%, 42rem); margin-left: auto; padding: 3.25rem; }
+.landing-pill { display: inline-flex; align-items: center; gap: .4rem; border-radius: 99px; background: #eaf1ff; padding: .42rem .72rem; color: #355aa6; font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.landing-promise { color: #16775d; font-size: 1.16rem; font-weight: 750; }
+.landing-metrics { display: flex; flex-wrap: wrap; gap: .55rem; }
+.landing-metrics span { border: 1px solid #dbe6f7; border-radius: 99px; background: #fff; padding: .45rem .68rem; color: #4b5e7d; font-size: .8rem; font-weight: 650; }
+.landing-art-note { position: absolute; z-index: 1; left: 1.25rem; bottom: 1.25rem; border: 1px solid rgb(255 255 255 / .64); border-radius: 99px; background: rgb(255 255 255 / .82); padding: .45rem .7rem; color: #285b65; font-size: .77rem; font-weight: 700; backdrop-filter: blur(5px); }
+.landing-section-heading h2 { margin-top: .32rem; color: var(--color-brand-900); font-size: 1.65rem; font-weight: 750; }
+.landing-benefits { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; }
+.landing-benefit { min-height: 12.5rem; border: 1px solid #e0e7f2; border-radius: 1rem; padding: 1.3rem; background: #fff; box-shadow: 0 4px 14px rgb(22 35 59 / .04); transition: transform .25s ease, box-shadow .25s ease; }
+.landing-benefit:hover { transform: translateY(-3px); box-shadow: 0 11px 22px rgb(22 35 59 / .10); }
+.landing-benefit-icon { display: grid; width: 2.35rem; height: 2.35rem; place-items: center; border-radius: .7rem; background: #edf3ff; color: #3970dc; font-size: 1.15rem; font-weight: 800; }
+.landing-benefit h3 { margin-top: 1rem; color: #1d3158; font-size: 1.03rem; font-weight: 750; }.landing-benefit p { margin-top: .45rem; color: #61708a; font-size: .9rem; line-height: 1.55; }
+.landing-flow { display: grid; grid-template-columns: .82fr 1.18fr; gap: 2rem; align-items: center; border-radius: 1.15rem; padding: 2rem 2.25rem; background: linear-gradient(115deg, #152856, #2c5fbd); color: #fff; box-shadow: 0 11px 22px rgb(23 45 94 / .15); }
+.landing-flow h2 { margin-top: .35rem; font-size: 1.55rem; font-weight: 750; }.landing-flow p { margin-top: .55rem; color: #d8e4ff; line-height: 1.55; }.landing-flow ol { display: grid; gap: .72rem; counter-reset: landing-flow; }.landing-flow li { display: flex; align-items: center; gap: .8rem; border: 1px solid rgb(255 255 255 / .14); border-radius: .7rem; background: rgb(255 255 255 / .09); padding: .7rem .85rem; font-weight: 650; }.landing-flow li span { display: grid; width: 2rem; height: 2rem; place-items: center; border-radius: 50%; background: #fff; color: #2756ac; font-size: .76rem; font-weight: 850; }.landing-notice { margin-bottom: 2.5rem; }
+@media (max-width: 800px) { .landing-hero { min-height: auto; margin-right: 1rem; margin-left: 1rem; }.landing-hero-background { background-image: linear-gradient(180deg, rgb(255 255 255 / .7), #fff 48%), url("/images/caresetu-hero.png"); background-position: 33% top; background-size: auto 25rem; background-repeat: no-repeat; }.landing-copy { width: 100%; margin-top: 13.5rem; padding: 2.15rem; }.landing-art-note { display: none; }.landing-benefits { grid-template-columns: 1fr; }.landing-flow { grid-template-columns: 1fr; gap: 1.35rem; padding: 1.7rem; }.landing-section-heading, .landing-benefits, .landing-flow, .landing-notice { margin-right: 1rem; margin-left: 1rem; } }
+
 .eyebrow {
   font-size: 0.72rem;
   font-weight: 700;
@@ -98,6 +117,8 @@ body {
   outline: 2px solid var(--color-brand-500);
   outline-offset: 1px;
 }
+
+.summary-editor { line-height: 1.6; font-size: .92rem; white-space: pre-wrap; }
 
 .choice {
   display: block;
